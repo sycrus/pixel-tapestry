@@ -1,7 +1,249 @@
 html, body {
   margin: 0;
   padding: 0;
+  min-height: 100vh;
+  overflow: hidden;
+}
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
 }
 canvas {
   display: block;
+}
+
+/* panels flanking the square canvas: controls on the left, the keyboard
+   reference on the right. Fixed-positioned off the canvas's own rect, so
+   they re-center with it on resize; DOM, so they never appear in exports.
+   Light variant of the Annulus panel — the canvas itself is white. */
+.panel {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  font-family: monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #333;
+  /* a menu taller than the canvas scrolls instead of spilling off-screen */
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+}
+/* vertical centring via auto margins rather than justify-content: center,
+   which pushes overflow past the top edge where it can't be scrolled to */
+.panel > :first-child { margin-top: auto; }
+.panel > :last-child { margin-bottom: auto; }
+
+.panel .sec {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.panel .sec-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #a0a0a0;
+}
+.panel .sec-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2e2e2;
+}
+
+/* menu buttons: full-width rows, action left and shortcut chip right */
+#menu .btns {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+#menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 5px 9px;
+  font-family: monospace;
+  font-size: 11px;
+  background: #fff;
+  border: 1px solid #d6d6d6;
+  border-radius: 4px;
+  color: #222;
+  cursor: pointer;
+}
+#menu button:hover {
+  border-color: #999;
+  background: #f6f6f6;
+}
+#menu button:active { background: #ececec; }
+#menu button .action { text-align: left; }
+#menu button .key {
+  padding: 1px 5px;
+  font-size: 10px;
+  color: #888;
+  background: #f4f4f4;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+}
+
+/* menu rows: label above, control below */
+#menu .row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+#menu .row label {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+#menu .row label .val { color: #999; }
+#menu input[type="range"] {
+  width: 100%;
+}
+
+/* hint rows: gesture emphasised left, effect muted right */
+#hint .row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 1px 0;
+}
+#hint .row span:first-child {
+  color: #111;
+  font-weight: 700;
+}
+#hint .row span:last-child { color: #999; }
+
+/* carpet editor (ADR-030) — edit mode only */
+.panel button:disabled { opacity: 0.4; cursor: default; }
+.panel .muted { color: #999; }
+.panel .check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.panel .check input { margin: 0; }
+
+/* brush swatches: 10 levels, light → dark, one row */
+.swatches {
+  display: grid;
+  padding: 3px; /* room for the selected swatch's outline */
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 2px;
+}
+.swatch {
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid #d6d6d6;
+  border-radius: 2px;
+  cursor: pointer;
+}
+.swatch.on {
+  outline: 2px solid #e5484d;
+  outline-offset: 1px;
+}
+canvas.bucket {
+  display: block;
+  image-rendering: pixelated;
+}
+
+/* carpet list: grayscale thumbnails, the shown one outlined */
+.carpets {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.carpets > .muted { grid-column: 1 / -1; }
+.carpet {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  font-family: monospace;
+  font-size: 10px;
+  color: #888;
+  background: #fff;
+  border: 1px solid #d6d6d6;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.carpet canvas {
+  width: 100%;
+  aspect-ratio: 1;
+  image-rendering: pixelated;
+}
+.carpet.on { border-color: #e5484d; color: #222; }
+
+/* #hint now carries buttons and sliders too; share #menu's look */
+#hint .btns { display: flex; flex-direction: column; gap: 6px; }
+#hint .btns.inline { flex-direction: row; }
+#hint .btns button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex: 1;
+  padding: 5px 9px;
+  font-family: monospace;
+  font-size: 11px;
+  background: #fff;
+  border: 1px solid #d6d6d6;
+  border-radius: 4px;
+  color: #222;
+  cursor: pointer;
+}
+#hint .btns.inline button { justify-content: center; padding: 5px 4px; }
+#hint .btns button:hover:not(:disabled) { border-color: #999; background: #f6f6f6; }
+#hint .btns button .key {
+  padding: 1px 5px;
+  font-size: 10px;
+  color: #888;
+  background: #f4f4f4;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+}
+#hint .sec .row:has(input[type="range"]) {
+  flex-direction: column;
+  gap: 4px;
+}
+#hint .row label { display: flex; justify-content: space-between; color: #333; font-weight: 400; }
+#hint .row label .val { color: #999; }
+#hint input[type="range"] { width: 100%; }
+.panel .readout { color: #e5484d; min-height: 1.5em; }
+
+/* edit-mode guides: an SVG layer over the canvas — never drawn into the
+   canvas, so captures, png saves and recordings can't include them */
+#guides {
+  position: fixed;
+  pointer-events: none;
+  overflow: visible;
+  shape-rendering: crispEdges;
+}
+#guides text {
+  font: 10px monospace;
+  dominant-baseline: hanging;
+  stroke: #fff;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  paint-order: stroke;
+  shape-rendering: auto;
 }
